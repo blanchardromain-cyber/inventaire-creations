@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mes créations avec Claude — Romain Blanchard</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181c25;
+    --surface2: #1e2330;
+    --border: #2a3045;
+    --accent: #4f8ef7;
+    --accent2: #7c5cfc;
+    --green: #29d398;
+    --orange: #f59e0b;
+    --red: #f87171;
+    --text: #e2e8f0;
+    --muted: #7a8499;
+    --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+    --font-body: 'Inter', 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    background: linear-gradient(135deg, #0f1117 0%, #1a1f30 50%, #0d1420 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -80px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(79,142,247,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 30%;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(124,92,252,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-inner { max-width: 1100px; margin: 0 auto; position: relative; }
+  .header-meta { color: var(--muted); font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; margin-bottom: .5rem; }
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 700;
+    background: linear-gradient(120deg, #e2e8f0 0%, var(--accent) 60%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: .6rem;
+  }
+  .header-sub { color: var(--muted); font-size: .95rem; max-width: 600px; }
+  .stats-row {
+    display: flex; gap: 1.5rem; margin-top: 1.8rem; flex-wrap: wrap;
+  }
+  .stat-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: .35rem 1rem;
+    font-size: .82rem;
+    color: var(--muted);
+    display: flex; align-items: center; gap: .4rem;
+  }
+  .stat-chip span { color: var(--text); font-weight: 600; }
+
+  /* ─── TOOLBAR ─── */
+  .toolbar {
+    max-width: 1100px; margin: 1.8rem auto 0; padding: 0 2rem;
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  }
+  .search-wrap { flex: 1; min-width: 200px; position: relative; }
+  .search-wrap input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .55rem 1rem .55rem 2.4rem;
+    color: var(--text);
+    font-size: .9rem;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-wrap::before {
+    content: '⌕';
+    position: absolute; left: .8rem; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 1.1rem; pointer-events: none;
+  }
+  .filter-row { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .38rem .85rem;
+    color: var(--muted);
+    font-size: .82rem;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .filter-btn.active {
+    background: rgba(79,142,247,.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ─── GRID ─── */
+  .grid-wrap { max-width: 1100px; margin: 1.8rem auto 3rem; padding: 0 2rem; }
+  .results-count { color: var(--muted); font-size: .82rem; margin-bottom: 1rem; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 1.1rem;
+  }
+
+  /* ─── CARD ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.3rem 1.4rem;
+    display: flex; flex-direction: column; gap: .75rem;
+    transition: border-color .2s, transform .15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    border-radius: 12px 12px 0 0;
+  }
+  .card[data-cat="github"]::before { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .card[data-cat="app"]::before    { background: linear-gradient(90deg, var(--green), #1ba878); }
+  .card[data-cat="doc"]::before    { background: linear-gradient(90deg, var(--orange), #e07b00); }
+  .card[data-cat="formation"]::before { background: linear-gradient(90deg, var(--accent2), #b44fee); }
+  .card[data-cat="concept"]::before  { background: linear-gradient(90deg, var(--red), #d44); }
+  .card:hover { border-color: #3a4060; transform: translateY(-2px); }
+  .card.hidden { display: none; }
+  .card.is-new { border-color: rgba(41,211,152,.45); }
+  .card.is-new::after {
+    content: '✨ NOUVEAU';
+    position: absolute;
+    top: .85rem; right: -2.1rem;
+    background: var(--green);
+    color: #06281d;
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    padding: .22rem 2.4rem;
+    transform: rotate(40deg);
+    box-shadow: 0 2px 6px rgba(0,0,0,.3);
+  }
+
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
+  .card-emoji { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
+  .cat-badge {
+    font-size: .7rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .18rem .6rem;
+    border-radius: 999px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  [data-cat="github"]   .cat-badge { background: rgba(79,142,247,.15);  color: var(--accent); }
+  [data-cat="app"]      .cat-badge { background: rgba(41,211,152,.15);  color: var(--green); }
+  [data-cat="doc"]      .cat-badge { background: rgba(245,158,11,.15);  color: var(--orange); }
+  [data-cat="formation"] .cat-badge { background: rgba(124,92,252,.15); color: var(--accent2); }
+  [data-cat="concept"]  .cat-badge { background: rgba(248,113,113,.15); color: var(--red); }
+
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .card-sub { font-size: .8rem; color: var(--muted); }
+  .card-desc { font-size: .85rem; color: #a0aab8; line-height: 1.5; flex: 1; }
+
+  .card-tags { display: flex; gap: .4rem; flex-wrap: wrap; }
+  .tag {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: .1rem .5rem;
+    font-size: .72rem;
+    color: var(--muted);
+  }
+
+  .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: .2rem; }
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  }
+  .status-live    { background: var(--green); box-shadow: 0 0 6px rgba(41,211,152,.5); }
+  .status-draft   { background: var(--orange); }
+  .status-concept { background: var(--red); opacity: .7; }
+
+  .status-label { font-size: .75rem; color: var(--muted); display: flex; align-items: center; gap: .4rem; }
+
+  .card-link {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .78rem;
+    color: var(--accent);
+    text-decoration: none;
+    padding: .25rem .65rem;
+    background: rgba(79,142,247,.1);
+    border: 1px solid rgba(79,142,247,.25);
+    border-radius: 6px;
+    transition: background .15s;
+  }
+  .card-link:hover { background: rgba(79,142,247,.2); }
+  .no-link { font-size: .78rem; color: var(--muted); font-style: italic; }
+
+  /* ─── EMPTY ─── */
+  .empty { grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--muted); }
+
+  /* ─── LEGEND ─── */
+  .legend { max-width: 1100px; margin: 0 auto 1.5rem; padding: 0 2rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: .4rem; font-size: .78rem; color: var(--muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--muted);
+    font-size: .8rem;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 600px) {
+    .stats-row { gap: .75rem; }
+    .grid { grid-template-columns: 1fr; }
+    header, .toolbar, .grid-wrap { padding-left: 1rem; padding-right: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-meta">Collège Saint-Pierre · Les Essarts · Vendée</div>
+    <h1>Mes créations avec Claude</h1>
+    <p class="header-sub">Inventaire des applications, outils pédagogiques, documents et formations produits avec l'aide de l'IA — Romain Blanchard, prof de Technologie & RUPN</p>
+    <p style="color: var(--green); font-size: .85rem; margin-top: .5rem;">✨ 1 nouvelle création cette semaine via Claude Code</p>
+    <div class="stats-row">
+      <div class="stat-chip">🚀 <span id="count-github">—</span> dépôts GitHub</div>
+      <div class="stat-chip">⚙️ <span id="count-app">—</span> apps & outils</div>
+      <div class="stat-chip">📄 <span id="count-doc">—</span> documents</div>
+      <div class="stat-chip">🎓 <span id="count-formation">—</span> formations</div>
+      <div class="stat-chip">💡 <span id="count-concept">—</span> concepts</div>
+    </div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="search-wrap">
+    <input type="text" id="search" placeholder="Rechercher une création…" autocomplete="off">
+  </div>
+  <div class="filter-row">
+    <button class="filter-btn active" data-filter="all">Tout</button>
+    <button class="filter-btn" data-filter="new">✨ Nouveautés</button>
+    <button class="filter-btn" data-filter="github">🌐 GitHub Pages</button>
+    <button class="filter-btn" data-filter="app">⚙️ Apps & outils</button>
+    <button class="filter-btn" data-filter="doc">📄 Documents</button>
+    <button class="filter-btn" data-filter="formation">🎓 Formations</button>
+    <button class="filter-btn" data-filter="concept">💡 Concepts</button>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot status-live"></div>En ligne / actif</div>
+  <div class="legend-item"><div class="legend-dot status-draft"></div>En cours / brouillon</div>
+  <div class="legend-item"><div class="legend-dot status-concept"></div>Concept / à construire</div>
+</div>
+
+<div class="grid-wrap">
+  <div class="results-count" id="results-count"></div>
+  <div class="grid" id="grid">
+    <!-- Généré par JS -->
+  </div>
+</div>
+
+<footer>
+  Mis à jour le <strong>juin 2026</strong> · Romain Blanchard · <a href="https://github.com/blanchardromain-cyber" target="_blank">@blanchardromain-cyber</a>
+</footer>
+
+<script>
+const ITEMS = [
+  /* ═══ NOUVEAUTÉS DE LA SEMAINE (Claude Code) ═══ */
+  {
+    cat: "app", emoji: "🔀", title: "Répartiteur de classes 3ème",
+    sub: "~150-162 élèves → 6 classes · Outil fonctionnel",
+    desc: "Outil HTML client-side généré par Claude Code : import Excel (SheetJS), mapping de colonnes auto-détecté, contrôle qualité des données, configuration des contraintes (exclusions, associations, options, pré-affectations), optimisation par recuit simulé, dashboard de résultats avec ajustement drag-and-drop. Gain estimé : 4h → 30 min.",
+    tags: ["HTML/JS","Claude Code","SheetJS","Recuit simulé","100% client-side"],
+    status: "live", link: null
+  },
+  {
+    cat: "formation", emoji: "🎯", title: "Capsule Formation Avenir(s) — v2 optimisée",
+    sub: "6 étapes · 5ème · Mise à jour Claude Code",
+    desc: "Itération de la capsule existante : corrections de formatage par étape, suppression des marqueurs placeholder, intégration d'image à l'étape 5, résolution de la redondance entre Étape 1 (Repères) et Étape 5 (Planifier). Génération d'un rundown de formation 45 min (timeline, Veyon, groupes par PP).",
+    tags: ["HTML/JS","Claude Code","Itération","Formation"],
+    status: "live", link: "https://blanchardromain-cyber.github.io/formation-avenirs/",
+    linkLabel: "Voir en ligne", isNew: true
+  },
+
+  /* ═══ GITHUB PAGES ═══ */
+  {
+    cat: "github", emoji: "🌡️", title: "Quiz Révision Programme 5e",
+    sub: "quiz-revision-5e · Continuité pédagogique canicule · juin 2026",
+    desc: "Quiz HTML responsive généré par Claude Code pour 7 classes (5A–5G) en distanciel suite à la décision préfectorale canicule. Sections par séquence, Projet 2 enrichi à 30-35 questions à partir des corrigés élèves, résultats vers Google Sheets (pattern beacon), dashboard de visualisation (5 graphiques). Partagé avec le collègue Régis Lucas.",
+    tags: ["HTML/JS","Claude Code","Google Apps Script","7 classes","GitHub Pages"],
+    status: "live", link: null
+  },
+  {
+    cat: "github", emoji: "🤖", title: "Chatbot Méca",
+    sub: "Séquence P12 · Activité A2 · 4ème",
+    desc: "Chatbot pédagogique socratique pour découvrir la différence entre systèmes manuels, mécanisés et automatisés. Proxy Cloudflare Workers → Groq (Llama 3.1). Interface rétro-futuriste avec avatar robot animé.",
+    tags: ["HTML/JS","Cloudflare Workers","Groq","GitHub Pages"],
+    status: "live", link: "https://blanchardromain-cyber.github.io/Chatbot-systemes-meca-non-meca-auto/",
+    linkLabel: "Voir en ligne"
+  },
+  {
+    cat: "github", emoji: "🧩", title: "Atelier Algorigramme",
+    sub: "Séquence P12 · Activité A3 · 4ème",
+    desc: "Application native HTML/JS de 9 exercices de drag-and-drop sur les algorigrammes (boucles, branchements, cascades). Logging Google Sheets, système de pénalité/reprise, compatible tactile.",
+    tags: ["HTML/JS","Drag & Drop","Google Apps Script","GitHub Pages"],
+    status: "live", link: "https://blanchardromain-cyber.github.io/AtelierAlgorigramme/",
+    linkLabel: "Voir en ligne"
+  },
+  {
+    cat: "github", emoji: "📚", title: "Site Techno P13",
+    sub: "Quiz-techno-p13 · 4ème / 5ème / 6ème",
+    desc: "Site multi-séquences avec authentification élèves (374 élèves, 8 classes), codes d'accès par séquence, dashboard professeur avec stats, export CSV. Inclut la Classe Inversée P13 Biomimétisme + Remédiation.",
+    tags: ["HTML/JS","374 élèves","Google Sheets","Auth élèves","GitHub Pages"],
+    status: "live", link: "https://blanchardromain-cyber.github.io/quiz-techno-p13/",
+    linkLabel: "Voir en ligne"
+  },
+  {
+    cat: "github", emoji: "🎯", title: "Capsule Formation Avenir(s)",
+    sub: "Formation RUPN · Professeurs principaux",
+    desc: "Capsule HTML autonome pour former ~20 collègues (PP de 5e/4e/3e) à la plateforme ONISEP Avenir(s) via École Directe. Authentification SHA-256, code d'accès AVN26, 'Mur de promo' collaboratif en temps réel.",
+    tags: ["HTML/JS","Google Apps Script","Formation","Mur collaboratif","GitHub Pages"],
+    status: "live", link: "https://blanchardromain-cyber.github.io/formation-avenirs/",
+    linkLabel: "Voir en ligne"
+  },
+  {
+    cat: "github", emoji: "📝", title: "Grille Oral Brevet",
+    sub: "Épreuve orale de brevet · 3ème",
+    desc: "Interface web locale de grille de notation pour l'oral du brevet. Saisie candidat (nom, prénom, classe 3e, numéro sujet 1-15), calcul instantané des sous-totaux (Expression orale 40pts / Maîtrise sujet 60pts), export PDF.",
+    tags: ["HTML/JS","PDF export","Local","Brevet"],
+    status: "live", link: null
+  },
+  {
+    cat: "github", emoji: "🏠", title: "Page élève convalescent (Paul)",
+    sub: "Accès à distance · cours à domicile",
+    desc: "Page de cours à distance hébergée sur GitHub Pages pour un élève convalescent, donnant accès aux capsules et ressources de la séquence en cours.",
+    tags: ["HTML","GitHub Pages","Accessibilité"],
+    status: "draft", link: null
+  },
+  {
+    cat: "github", emoji: "🌱", title: "Site partage IA collègues",
+    sub: "Retours d'expérience IA · Collège Saint-Pierre",
+    desc: "Page de témoignages pédagogiques IA pour les collègues : formulaire de dépôt (matière, outil, usage, avis), affichage des retours filtrables, backend Google Sheets. Mode démo si backend non configuré.",
+    tags: ["HTML/JS","Google Apps Script","RUPN","GitHub Pages"],
+    status: "draft", link: null
+  },
+
+  /* ═══ APPS & OUTILS ═══ */
+  {
+    cat: "app", emoji: "📊", title: "Devoir Commun en ligne",
+    sub: "Évaluation numérique · 4ème · mai 2026",
+    desc: "Application d'évaluation avec modal élève et professeur, chronomètre visible, code d'activation (CODC00), correction automatique, ajustement manuel des scores, clé de réponses verrouillée par code. Hébergé sur le site techno.",
+    tags: ["HTML/JS","Google Sheets","Code d'accès","Chronomètre"],
+    status: "live", link: "https://blanchardromain-cyber.github.io/quiz-techno-p13/",
+    linkLabel: "Dans le site techno"
+  },
+  {
+    cat: "app", emoji: "🐍", title: "Pipeline Python Appréciations",
+    sub: "Outil RUPN · Trimestres T1 / T2 / T3",
+    desc: "Pipeline Python en 8 étapes : anonymisation RGPD (noms remplacés par IDs), détection de genre, génération d'appréciations via API Claude (350 car. max), supervision genre, export Word. ~3$/an pour 374 élèves × 3 trimestres.",
+    tags: ["Python","API Anthropic","RGPD","Word export","Windows 11"],
+    status: "live", link: null
+  },
+  {
+    cat: "app", emoji: "⚡", title: "Prototype interactif Arduino/Grove",
+    sub: "Ressource pédagogique · Technologie",
+    desc: "Prototype HTML interactif présentant les composants Arduino et le shield Grove avec un quiz intégré. Hébergeable sur Firebase, Infomaniak ou GitHub Pages.",
+    tags: ["HTML/JS","Arduino","Quiz","Ressource"],
+    status: "live", link: null
+  },
+
+  /* ═══ DOCUMENTS ═══ */
+  {
+    cat: "doc", emoji: "📋", title: "Fiche de synthèse P12",
+    sub: "Technologie & Alimentation · 4ème · 2025-26",
+    desc: "Fiche passive rédigée pour coller au cahier. 5 parties : objets techniques et fonctions, évolution technique, outils d'analyse du besoin (bête à cornes, diagramme des exigences, normes IEEE & CEI), objets connectés et chaîne d'information, algorigramme. Checklist de 12 points évaluables.",
+    tags: [".docx","Google Docs","4ème","P12"],
+    status: "live", link: null
+  },
+  {
+    cat: "doc", emoji: "✂️", title: "Tutoriel Découpe Laser X2PS",
+    sub: "Formation interne · Diffuseur de parfum · SolidWorks/XTools",
+    desc: "Livret de formation pas-à-pas (images numérotées de 26 captures) + checklist fin de séance recto-verso A4. Destiné à 2 collègues déjà formés à l'impression 3D (Ultimaker 2+ et Bambu A1). Pièces MDF 10mm + tilleul 2mm.",
+    tags: [".docx","Laser","Formation","Checklist"],
+    status: "live", link: null
+  },
+  {
+    cat: "doc", emoji: "🌿", title: "Fiche ressource Four connecté",
+    sub: "Séquence P13 Biomimétisme · 4ème",
+    desc: "Fiche élève ressource sur le four connecté, formatée avec le système de design Claymorphism généré par le skill UI UX Pro Max. Styles appliqués via tokens docx.",
+    tags: [".docx","P13","Design system","4ème"],
+    status: "live", link: null
+  },
+  {
+    cat: "doc", emoji: "📡", title: "Dossier séquence P12 complet",
+    sub: "Activités A1–A3 + évaluation + correction",
+    desc: "Ensemble des documents élèves et professeur pour la séquence P12 : fiches activités, fiches ressources, clés de correction, grilles d'évaluation. Produits en collaboration sur Claude Chat et Claude Code.",
+    tags: [".docx","Séquence","4ème","P12"],
+    status: "live", link: null
+  },
+
+  /* ═══ FORMATIONS ═══ */
+  {
+    cat: "formation", emoji: "🎓", title: "Formation Avenir(s) — Session complète",
+    sub: "RUPN · Collège Saint-Pierre · ~20 PP",
+    desc: "Session de 45-60 min avec plan détaillé, capsule HTML interactive, Apps Script backend et 'Mur de promo' en direct. L'enseignant devient l'apprenant pour découvrir la plateforme ONISEP du côté élève.",
+    tags: ["Formation","Capsule HTML","Apps Script","RUPN","ONISEP"],
+    status: "live", link: null
+  },
+  {
+    cat: "formation", emoji: "📊", title: "Deck RUPN Vendée — Appréciations IA",
+    sub: "Réunion RUPN Vendée · Présentation Canva",
+    desc: "Présentation Canva 14 slides (style digital/HK Grotesk) du pipeline Python d'appréciations automatisées. Explique les 8 étapes, les garanties RGPD, le tableau de coûts API, et justifie le modèle économique.",
+    tags: ["Canva","Présentation","RUPN","Appréciations"],
+    status: "live", link: null
+  },
+  {
+    cat: "formation", emoji: "✉️", title: "Email informatif Albert API",
+    sub: "Information collègues · Collège Saint-Pierre",
+    desc: "Email rédigé pour informer les collègues de l'existence de l'API Albert (DINUM) : accès, création de compte avec adresse académique, avantages RGPD, limites (texte uniquement), modèle disponible.",
+    tags: ["Email","Albert API","DINUM","RGPD","Information"],
+    status: "live", link: null
+  },
+
+  /* ═══ CONCEPTS ═══ */
+  {
+    cat: "concept", emoji: "🏫", title: "Filius — Séquence Réseaux 5ème",
+  {
+    cat: "concept", emoji: "🏫", title: "Filius — Séquence Réseaux 5ème",
+    sub: "Concept · Simulation réseau · Rentrée 2026",
+    desc: "Activités de manipulation réseau avec le simulateur Filius (Java, sans installation, en français) pour compléter la séquence sur les réseaux informatiques. Progressives et ludiques.",
+    tags: ["Concept","Filius","Réseaux","5ème"],
+    status: "concept", link: null
+  },
+  {
+    cat: "concept", emoji: "🖥️", title: "Projection en-têtes copie DNB",
+    sub: "Concept · Salles d'examen · brevet",
+    desc: "Architecture envisagée : interface admin pour saisir les références d'épreuve (discipline, créneau, durée, coefficient) + vue projection en lecture seule pour les salles. Options de diffusion comparées (PC salle, tablettes, écrans fixes). Reste au stade de discussion, aucun code généré.",
+    tags: ["Concept","DNB","En discussion"],
+    status: "concept", link: null
+  },
+];
+
+// ─── RENDER ───
+const grid = document.getElementById('grid');
+const searchInput = document.getElementById('search');
+const filterBtns = document.querySelectorAll('.filter-btn');
+const resultsCount = document.getElementById('results-count');
+
+let activeFilter = 'all';
+
+function render() {
+  const q = searchInput.value.toLowerCase().trim();
+  let visible = 0;
+
+  ITEMS.forEach((item, i) => {
+    let card = document.getElementById('card-' + i);
+    if (!card) return;
+    const matchCat = activeFilter === 'all' || item.cat === activeFilter || (activeFilter === 'new' && item.isNew);
+    const matchQ = !q || [item.title, item.sub, item.desc, ...item.tags].some(t => t.toLowerCase().includes(q));
+    if (matchCat && matchQ) { card.classList.remove('hidden'); visible++; }
+    else card.classList.add('hidden');
+  });
+
+  resultsCount.textContent = visible + ' création' + (visible > 1 ? 's' : '') + ' affichée' + (visible > 1 ? 's' : '');
+
+  // Empty state
+  let emptyEl = document.getElementById('empty-state');
+  if (visible === 0) {
+    if (!emptyEl) {
+      emptyEl = document.createElement('div');
+      emptyEl.id = 'empty-state';
+      emptyEl.className = 'empty';
+      emptyEl.innerHTML = '😶‍🌫️ Aucun résultat pour <strong>"' + searchInput.value + '"</strong>';
+      grid.appendChild(emptyEl);
+    }
+  } else {
+    if (emptyEl) emptyEl.remove();
+  }
+}
+
+function buildCards() {
+  grid.innerHTML = '';
+  const cats = { github: 0, app: 0, doc: 0, formation: 0, concept: 0 };
+
+  ITEMS.forEach((item, i) => {
+    cats[item.cat]++;
+    const statusClass = { live: 'status-live', draft: 'status-draft', concept: 'status-concept' }[item.status];
+    const statusLabel = { live: 'En ligne', draft: 'En cours', concept: 'Concept' }[item.status];
+    const catLabel = { github: 'GitHub Pages', app: 'App / Outil', doc: 'Document', formation: 'Formation', concept: 'Concept' }[item.cat];
+
+    const tagsHtml = item.tags.map(t => `<span class="tag">${t}</span>`).join('');
+    const linkHtml = item.link
+      ? `<a class="card-link" href="${item.link}" target="_blank">↗ ${item.linkLabel || 'Voir'}</a>`
+      : `<span class="no-link">Fichier local</span>`;
+
+    const card = document.createElement('div');
+    card.className = 'card' + (item.isNew ? ' is-new' : '');
+    card.id = 'card-' + i;
+    card.dataset.cat = item.cat;
+    card.innerHTML = `
+      <div class="card-top">
+        <span class="card-emoji">${item.emoji}</span>
+        <span class="cat-badge">${catLabel}</span>
+      </div>
+      <div>
+        <div class="card-title">${item.title}</div>
+        <div class="card-sub">${item.sub}</div>
+      </div>
+      <div class="card-desc">${item.desc}</div>
+      <div class="card-tags">${tagsHtml}</div>
+      <div class="card-footer">
+        <span class="status-label"><span class="status-dot ${statusClass}"></span>${statusLabel}</span>
+        ${linkHtml}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Update stats
+  Object.keys(cats).forEach(k => {
+    const el = document.getElementById('count-' + k);
+    if (el) el.textContent = cats[k];
+  });
+
+  render();
+}
+
+// ─── EVENTS ───
+searchInput.addEventListener('input', render);
+filterBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    filterBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    render();
+  });
+});
+
+buildCards();
+</script>
+</body>
+</html>
